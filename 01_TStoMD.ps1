@@ -28,15 +28,9 @@ foreach ($txtFile in $txtFiles) {
     # 曲情報を出力ファイルに追加する
     $lineNumber = 1
     $songInfoPattern = "\((\d{2}:\d{2}:\d{2})\) ♪ (.*) / (.*)"
+    $songInfoWOArtistPattern = "\((\d{2}:\d{2}:\d{2})\)\s*♪\s*(.*)$"
     foreach ($line in $content) {
         if ($line -like "*♪*") {
-            #$timestamp = $line -replace '.*\((.*)\).*', '$1'
-            #$songInfo = $line -replace '.*♪\s+(.*)', '$1'
-            #$songInfo = $songInfo.Trim()
-
-            #$outputLine = "| $lineNumber | $songInfo |  | $timestamp |"
-            #$outputLine | Out-File -FilePath $outputFile -Append -Encoding UTF8
-
             # 曲情報を取得
             $matches = [regex]::Match($line, $songInfoPattern)
 
@@ -44,6 +38,14 @@ foreach ($txtFile in $txtFiles) {
             $timeStamp = $matches.Groups[1].Value
             $songTitle = $matches.Groups[2].Value
             $artist = $matches.Groups[3].Value
+
+            if ([String]::IsNullOrEmpty($songTitle)) {
+                # アーティスト名欠落のため、ノット マッチ
+                $matches = [regex]::Match($line, $songInfoWOArtistPattern)
+                $timeStamp = $matches.Groups[1].Value
+                $songTitle = $matches.Groups[2].Value
+                $artist = "(Various)"
+            }
 
             # 書き込む
             $outputLine = "| $lineNumber | $songTitle | $artist | $timeStamp |"
